@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Year at a Glance Widget</title>
+  <title>Week in Focus Widget</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400&family=DM+Sans:wght@200;300;400;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -14,7 +14,7 @@
       --ink: #1a1a18;
       --ink-muted: #9a8880;
       --accent: #B59259;
-      --accent-light: rgba(181,146,89,0.15);
+      --accent-light: rgba(181,146,89,0.12);
       --border: rgba(0,0,0,0.08);
       --radius: 16px;
     }
@@ -40,15 +40,21 @@
       position: relative;
     }
 
-    /* Top row */
+    /* Top row: Month + Year left, Week number right */
     .top-row {
       display: flex;
       align-items: baseline;
       justify-content: space-between;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
 
-    .year-title {
+    .month-year {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .month {
       font-family: 'DM Serif Display', serif;
       font-size: 20px;
       font-weight: 400;
@@ -56,24 +62,63 @@
       letter-spacing: -0.01em;
     }
 
-
-
-    /* Month grid */
-    .months-grid {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 6px;
-      margin-bottom: 14px;
+    .year {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 300;
+      color: var(--ink-muted);
     }
 
-    .month-block {
+    .week-num {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 300;
+      color: var(--ink-muted);
+      letter-spacing: 0.04em;
+    }
+
+    .week-num span {
+      color: var(--accent);
+      font-weight: 400;
+    }
+
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .nav-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--accent);
+      font-size: 16px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      transition: background 0.15s;
+      line-height: 1;
+    }
+
+    .nav-btn:hover {
+      background: var(--accent-light);
+    }
+
+    /* Week row */
+    .week-row {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .day-col {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 5px;
     }
 
-    .month-name {
+    .day-name {
       font-family: 'DM Sans', sans-serif;
       font-size: 9px;
       font-weight: 600;
@@ -82,39 +127,56 @@
       color: var(--ink-muted);
     }
 
-    .month-name.is-current {
+    .day-name.is-today {
       color: var(--accent);
     }
 
-    .month-name.is-past {
-      opacity: 0.4;
+    .day-num {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--ink);
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
     }
 
-    .month-bar-track {
-      width: 100%;
-      height: 4px;
-      background: rgba(0,0,0,0.07);
-      border-radius: 99px;
-      overflow: hidden;
-    }
-
-    .month-bar-fill {
-      height: 100%;
-      border-radius: 99px;
-    }
-
-    .month-bar-fill.is-past {
-      background: var(--ink-muted);
-      opacity: 0.3;
-      width: 100%;
-    }
-
-    .month-bar-fill.is-current {
+    .day-num.is-today {
       background: var(--accent);
+      color: #ffffff;
+      font-weight: 600;
     }
 
-    .month-bar-fill.is-future {
-      width: 0%;
+    .day-num.is-weekend {
+      color: var(--ink-muted);
+    }
+
+    .day-num.is-past {
+      opacity: 0.35;
+    }
+
+    .back-to-today {
+      display: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 10px;
+      font-weight: 400;
+      color: var(--accent);
+      letter-spacing: 0.06em;
+      text-align: center;
+      margin-top: 10px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      width: 100%;
+    }
+
+    .back-to-today:hover {
+      opacity: 0.7;
     }
 
     /* Divider */
@@ -122,106 +184,129 @@
       width: 100%;
       height: 1px;
       background: var(--border);
-      margin-bottom: 10px;
+      margin: 14px 0 10px;
     }
 
-    /* Bottom row */
-    .bottom-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .year-progress-label {
+    /* Bottom: date range */
+    .date-range {
       font-family: 'DM Sans', sans-serif;
       font-size: 10px;
       font-weight: 300;
       color: var(--ink-muted);
-    }
-
-    .year-pct {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 10px;
-      font-weight: 300;
-      color: var(--ink-muted);
-    }
-
-    .year-pct span {
-      color: var(--accent);
-      font-weight: 400;
+      letter-spacing: 0.06em;
+      text-align: center;
     }
   </style>
 </head>
 <body>
   <div class="widget">
     <div class="top-row">
-      <div class="year-title" id="year-title"></div>
-
+      <div class="month-year">
+        <span class="month" id="month"></span>
+        <span class="year" id="year"></span>
+      </div>
+      <div class="nav-controls">
+        <button class="nav-btn" id="prev-btn">&#8592;</button>
+        <div class="week-num">Week <span id="week-num"></span></div>
+        <button class="nav-btn" id="next-btn">&#8594;</button>
+      </div>
     </div>
-    <div class="months-grid" id="months-grid"></div>
+    <div class="week-row" id="week-row"></div>
     <div class="divider"></div>
-    <div class="bottom-row">
-      <div class="year-progress-label" id="year-progress-label"></div>
-      <div class="year-pct">Day <span id="day-of-year"></span> of <span id="days-in-year"></span></div>
-    </div>
+    <div class="date-range" id="date-range"></div>
+    <button class="back-to-today" id="back-to-today">↩ Back to today</button>
   </div>
 
   <script>
+    const DAY_NAMES    = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const MONTHS       = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const DAYS         = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-    const today     = new Date();
-    const thisMonth = today.getMonth();
-    const thisYear  = today.getFullYear();
-
-    // Day of year
-    const startOfYear = new Date(thisYear, 0, 1);
-    const dayOfYear   = Math.ceil((today - startOfYear) / 86400000);
-    const isLeap      = (thisYear % 4 === 0 && thisYear % 100 !== 0) || thisYear % 400 === 0;
-    const daysInYear  = isLeap ? 366 : 365;
-
-    document.getElementById('year-title').textContent   = thisYear;
-    document.getElementById('day-of-year').textContent  = dayOfYear;
-    document.getElementById('days-in-year').textContent = daysInYear;
-
-
-    // Quarter label
-    const quarter = Math.floor(thisMonth / 3) + 1;
-    document.getElementById('year-progress-label').textContent = `Q${quarter} · ${MONTHS_SHORT[thisMonth]}`;
-
-    // Build month blocks
-    const grid = document.getElementById('months-grid');
-    for (let m = 0; m < 12; m++) {
-      const isPast    = m < thisMonth;
-      const isCurrent = m === thisMonth;
-      const isFuture  = m > thisMonth;
-
-      const totalDays   = new Date(thisYear, m + 1, 0).getDate();
-      const currentDay  = isCurrent ? today.getDate() : 0;
-      const fillPct     = isCurrent ? Math.round((currentDay / totalDays) * 100) : 0;
-
-      const block = document.createElement('div');
-      block.className = 'month-block';
-
-      const name = document.createElement('div');
-      name.className = 'month-name' +
-        (isCurrent ? ' is-current' : '') +
-        (isPast ? ' is-past' : '');
-      name.textContent = MONTHS_SHORT[m];
-
-      const track = document.createElement('div');
-      track.className = 'month-bar-track';
-
-      const fill = document.createElement('div');
-      fill.className = 'month-bar-fill ' +
-        (isPast ? 'is-past' : isCurrent ? 'is-current' : 'is-future');
-      if (isCurrent) fill.style.width = fillPct + '%';
-
-      track.appendChild(fill);
-      block.appendChild(name);
-      block.appendChild(track);
-      grid.appendChild(block);
+    function getWeekNumber(d) {
+      const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+      date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+      const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+      return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
     }
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    // Start of current week (Sunday)
+    let weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - today.getDay());
+
+    function buildWeek() {
+      const weekRow = document.getElementById('week-row');
+      weekRow.innerHTML = '';
+
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(weekStart);
+        d.setDate(weekStart.getDate() + i);
+
+        const isToday   = d.toDateString() === today.toDateString();
+        const isPast    = d < today;
+        const isWeekend = i === 0 || i === 6;
+
+        const col = document.createElement('div');
+        col.className = 'day-col';
+
+        const name = document.createElement('div');
+        name.className = 'day-name' + (isToday ? ' is-today' : '');
+        name.textContent = DAY_NAMES[i];
+
+        const num = document.createElement('div');
+        let numClass = 'day-num';
+        if (isToday)              numClass += ' is-today';
+        if (isPast && !isToday)   numClass += ' is-past';
+        if (isWeekend && !isToday) numClass += ' is-weekend';
+        num.className   = numClass;
+        num.textContent = d.getDate();
+
+        col.appendChild(name);
+        col.appendChild(num);
+        weekRow.appendChild(col);
+      }
+
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+
+      // Use the month of the middle of the week for the header
+      const midWeek = new Date(weekStart);
+      midWeek.setDate(weekStart.getDate() + 3);
+
+      document.getElementById('month').textContent    = MONTHS[midWeek.getMonth()];
+      document.getElementById('year').textContent     = midWeek.getFullYear();
+      document.getElementById('week-num').textContent = getWeekNumber(midWeek);
+
+      const startStr = `${weekStart.getDate()} ${MONTHS_SHORT[weekStart.getMonth()]}`;
+      const endStr   = `${weekEnd.getDate()} ${MONTHS_SHORT[weekEnd.getMonth()]}`;
+      document.getElementById('date-range').textContent = `${startStr} — ${endStr}`;
+
+      // Show/hide back to today
+      const todayWeekStart = new Date(today);
+      todayWeekStart.setDate(today.getDate() - today.getDay());
+      const isCurrentWeek = weekStart.toDateString() === todayWeekStart.toDateString();
+      document.getElementById('back-to-today').style.display = isCurrentWeek ? 'none' : 'block';
+    }
+
+    document.getElementById('prev-btn').addEventListener('click', () => {
+      weekStart.setDate(weekStart.getDate() - 7);
+      buildWeek();
+    });
+
+    document.getElementById('next-btn').addEventListener('click', () => {
+      weekStart.setDate(weekStart.getDate() + 7);
+      buildWeek();
+    });
+
+    document.getElementById('back-to-today').addEventListener('click', () => {
+      weekStart = new Date(today);
+      weekStart.setDate(today.getDate() - today.getDay());
+      buildWeek();
+    });
+
+    buildWeek();
   </script>
 </body>
 </html>
