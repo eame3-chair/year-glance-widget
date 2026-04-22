@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Year at a Glance Widget</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400&family=DM+Sans:wght@200;300;400;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: transparent;
+      --surface: #f5ede9;
+      --ink: #1a1a18;
+      --ink-muted: #9a8880;
+      --accent: #B59259;
+      --accent-light: rgba(181,146,89,0.15);
+      --border: rgba(0,0,0,0.08);
+      --radius: 16px;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .widget {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px 18px;
+      box-shadow: none;
+      width: 100%;
+      position: relative;
+    }
+
+    /* Top row */
+    .top-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .year-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 20px;
+      font-weight: 400;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+
+
+
+    /* Month grid */
+    .months-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .month-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .month-name {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+    }
+
+    .month-name.is-current {
+      color: var(--accent);
+    }
+
+    .month-name.is-past {
+      opacity: 0.4;
+    }
+
+    .month-bar-track {
+      width: 100%;
+      height: 4px;
+      background: rgba(0,0,0,0.07);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .month-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+    }
+
+    .month-bar-fill.is-past {
+      background: var(--ink-muted);
+      opacity: 0.3;
+      width: 100%;
+    }
+
+    .month-bar-fill.is-current {
+      background: var(--accent);
+    }
+
+    .month-bar-fill.is-future {
+      width: 0%;
+    }
+
+    /* Divider */
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: var(--border);
+      margin-bottom: 10px;
+    }
+
+    /* Bottom row */
+    .bottom-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .year-progress-label {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 10px;
+      font-weight: 300;
+      color: var(--ink-muted);
+    }
+
+    .year-pct {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 10px;
+      font-weight: 300;
+      color: var(--ink-muted);
+    }
+
+    .year-pct span {
+      color: var(--accent);
+      font-weight: 400;
+    }
+  </style>
+</head>
+<body>
+  <div class="widget">
+    <div class="top-row">
+      <div class="year-title" id="year-title"></div>
+
+    </div>
+    <div class="months-grid" id="months-grid"></div>
+    <div class="divider"></div>
+    <div class="bottom-row">
+      <div class="year-progress-label" id="year-progress-label"></div>
+      <div class="year-pct">Day <span id="day-of-year"></span> of <span id="days-in-year"></span></div>
+    </div>
+  </div>
+
+  <script>
+    const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const DAYS         = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+    const today     = new Date();
+    const thisMonth = today.getMonth();
+    const thisYear  = today.getFullYear();
+
+    // Day of year
+    const startOfYear = new Date(thisYear, 0, 1);
+    const dayOfYear   = Math.ceil((today - startOfYear) / 86400000);
+    const isLeap      = (thisYear % 4 === 0 && thisYear % 100 !== 0) || thisYear % 400 === 0;
+    const daysInYear  = isLeap ? 366 : 365;
+
+    document.getElementById('year-title').textContent   = thisYear;
+    document.getElementById('day-of-year').textContent  = dayOfYear;
+    document.getElementById('days-in-year').textContent = daysInYear;
+
+
+    // Quarter label
+    const quarter = Math.floor(thisMonth / 3) + 1;
+    document.getElementById('year-progress-label').textContent = `Q${quarter} · ${MONTHS_SHORT[thisMonth]}`;
+
+    // Build month blocks
+    const grid = document.getElementById('months-grid');
+    for (let m = 0; m < 12; m++) {
+      const isPast    = m < thisMonth;
+      const isCurrent = m === thisMonth;
+      const isFuture  = m > thisMonth;
+
+      const totalDays   = new Date(thisYear, m + 1, 0).getDate();
+      const currentDay  = isCurrent ? today.getDate() : 0;
+      const fillPct     = isCurrent ? Math.round((currentDay / totalDays) * 100) : 0;
+
+      const block = document.createElement('div');
+      block.className = 'month-block';
+
+      const name = document.createElement('div');
+      name.className = 'month-name' +
+        (isCurrent ? ' is-current' : '') +
+        (isPast ? ' is-past' : '');
+      name.textContent = MONTHS_SHORT[m];
+
+      const track = document.createElement('div');
+      track.className = 'month-bar-track';
+
+      const fill = document.createElement('div');
+      fill.className = 'month-bar-fill ' +
+        (isPast ? 'is-past' : isCurrent ? 'is-current' : 'is-future');
+      if (isCurrent) fill.style.width = fillPct + '%';
+
+      track.appendChild(fill);
+      block.appendChild(name);
+      block.appendChild(track);
+      grid.appendChild(block);
+    }
+  </script>
+</body>
+</html>
